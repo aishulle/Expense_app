@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Sharing App - Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px 0;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-right: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #2196F3;
+        }
+        .btn-secondary:hover {
+            background-color: #1976D2;
+        }
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-top: 0;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #66bb6a;
+        }
+        .success-message {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+            border: 1px solid #66bb6a;
+        }
+        .split-inputs {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 3px;
+        }
+        .split-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .split-row select, .split-row input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .split-row button {
+            padding: 5px 10px;
+            margin-top: 0;
+            background-color: #f44336;
+        }
+        .split-row button:hover {
+            background-color: #d32f2f;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .cache-list {
+            background-color: white;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+        .cache-item {
+            padding: 5px;
+            margin: 5px 0;
+            background-color: #f5f5f5;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cache-item-id {
+            font-family: monospace;
+            font-size: 11px;
+            color: #666;
+        }
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .flex-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .flex-row input, .flex-row select {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .info-text {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Expense Sharing App - Frontend</h1>
+    <p><strong>Backend API:</strong> http://localhost:8000</p>
+
+    <!-- Quick Reference -->
+    <div class="section">
+        <div class="section-header">
+            <h2>Quick Reference</h2>
+            <button class="btn-secondary btn-small" onclick="clearCache()">Clear Cache</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+                <label>Users (Created in this session):</label>
+                <div id="usersCache" class="cache-list">
+                    <div class="info-text">No users created yet</div>
+                </div>
+            </div>
+            <div>
+                <label>Groups (Created in this session):</label>
+                <div id="groupsCache" class="cache-list">
+                    <div class="info-text">No groups created yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. Create User -->
+    <div class="section">
+        <h2>1. Create User</h2>
+        <label for="userName">Name:</label>
+        <input type="text" id="userName" placeholder="Enter name">
+        
+        <label for="userEmail">Email:</label>
+        <input type="email" id="userEmail" placeholder="Enter email">
+        
+        <button onclick="createUser()" id="createUserBtn">Create User</button>
+        <div id="userResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- 2. Create Group -->
+    <div class="section">
+        <h2>2. Create Group</h2>
+        <label for="groupName">Group Name:</label>
+        <input type="text" id="groupName" placeholder="Enter group name">
+        
+        <button onclick="createGroup()" id="createGroupBtn">Create Group</button>
+        <div id="groupResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- 3. Add Group Members -->
+    <div class="section">
+        <h2>3. Add Group Members</h2>
+        <label for="addMemberGroupId">Group:</label>
+        <select id="addMemberGroupId">
+            <option value="">-- Select Group --</option>
+        </select>
+        <div class="info-text">Or enter Group ID manually:</div>
+        <input type="text" id="addMemberGroupIdManual" placeholder="Enter group ID (optional)">
+        
+        <label for="addMemberUserId">User:</label>
+        <select id="addMemberUserId">
+            <option value="">-- Select User --</option>
+        </select>
+        <div class="info-text">Or enter User ID manually:</div>
+        <input type="text" id="addMemberUserIdManual" placeholder="Enter user ID (optional)">
+        
+        <button onclick="addGroupMember()" id="addMemberBtn">Add Member</button>
+        <button class="btn-secondary btn-small" onclick="loadGroupDetails()">Load Group Details</button>
+        <div id="addMemberResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- 4. Add Expense -->
+    <div class="section">
+        <h2>4. Add Expense</h2>
+        <label for="expenseGroupId">Group:</label>
+        <select id="expenseGroupId" onchange="loadGroupForExpense()">
+            <option value="">-- Select Group --</option>
+        </select>
+        <div class="info-text">Or enter Group ID manually:</div>
+        <input type="text" id="expenseGroupIdManual" placeholder="Enter group ID (optional)" onchange="loadGroupForExpense()">
+        
+        <label for="paidByUserId">Paid By:</label>
+        <select id="paidByUserId">
+            <option value="">-- Select User --</option>
+        </select>
+        <div class="info-text">Or enter User ID manually:</div>
+        <input type="text" id="paidByUserIdManual" placeholder="Enter user ID (optional)">
+        
+        <label for="expenseAmount">Amount:</label>
+        <input type="number" id="expenseAmount" step="0.01" placeholder="Enter amount">
+        
+        <label for="expenseDescription">Description:</label>
+        <input type="text" id="expenseDescription" placeholder="Enter description">
+        
+        <label for="splitType">Split Type:</label>
+        <select id="splitType" onchange="updateSplitInputs()">
+            <option value="EQUAL">EQUAL (Split equally among all group members)</option>
+            <option value="EXACT">EXACT (Specify exact amounts)</option>
+            <option value="PERCENT">PERCENT (Split by percentage)</option>
+        </select>
+        
+        <div id="splitInputsContainer"></div>
+        <button onclick="addSplitRow()" id="addSplitBtn">Add Split</button>
+        <button class="btn-secondary btn-small" onclick="autoFillEqualSplits()" id="autoFillBtn" style="display:none;">Auto-fill with Group Members</button>
+        
+        <button onclick="addExpense()" id="addExpenseBtn">Add Expense</button>
+        <div id="expenseResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- 5. View Balances -->
+    <div class="section">
+        <h2>5. View Balances</h2>
+        <label for="balanceGroupId">Group:</label>
+        <select id="balanceGroupId">
+            <option value="">-- Select Group --</option>
+        </select>
+        <div class="info-text">Or enter Group ID manually:</div>
+        <input type="text" id="balanceGroupIdManual" placeholder="Enter group ID (optional)">
+        
+        <button onclick="viewRawBalances()" id="rawBalanceBtn">View Raw Balances</button>
+        <button onclick="viewSimplifiedBalances()" id="simplifiedBalanceBtn">View Simplified Balances</button>
+        <button class="btn-secondary btn-small" onclick="loadGroupForBalances()">Load Group Details</button>
+        
+        <div id="balanceResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- 6. Settle Payment -->
+    <div class="section">
+        <h2>6. Settle Payment</h2>
+        <label for="settleGroupId">Group:</label>
+        <select id="settleGroupId">
+            <option value="">-- Select Group --</option>
+        </select>
+        <div class="info-text">Or enter Group ID manually:</div>
+        <input type="text" id="settleGroupIdManual" placeholder="Enter group ID (optional)">
+        
+        <label for="payerId">Payer:</label>
+        <select id="payerId">
+            <option value="">-- Select User --</option>
+        </select>
+        <div class="info-text">Or enter User ID manually:</div>
+        <input type="text" id="payerIdManual" placeholder="Enter payer user ID (optional)">
+        
+        <label for="payeeId">Payee:</label>
+        <select id="payeeId">
+            <option value="">-- Select User --</option>
+        </select>
+        <div class="info-text">Or enter User ID manually:</div>
+        <input type="text" id="payeeIdManual" placeholder="Enter payee user ID (optional)">
+        
+        <label for="settleAmount">Amount:</label>
+        <input type="number" id="settleAmount" step="0.01" placeholder="Enter amount">
+        
+        <button onclick="settlePayment()" id="settleBtn">Settle</button>
+        <div id="settleResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let splitRowCount = 0;
+        let usersCache = [];
+        let groupsCache = [];
+        let currentGroupMembers = [];
+
+        // Load cache from localStorage on page load
+        function loadCache() {
+            const savedUsers = localStorage.getItem('expenseApp_users');
+            const savedGroups = localStorage.getItem('expenseApp_groups');
+            if (savedUsers) usersCache = JSON.parse(savedUsers);
+            if (savedGroups) groupsCache = JSON.parse(savedGroups);
+            updateCacheDisplay();
+            updateAllDropdowns();
+        }
+
+        // Save cache to localStorage
+        function saveCache() {
+            localStorage.setItem('expenseApp_users', JSON.stringify(usersCache));
+            localStorage.setItem('expenseApp_groups', JSON.stringify(groupsCache));
+        }
+
+        // Clear cache
+        function clearCache() {
+            if (confirm('Clear all cached users and groups?')) {
+                usersCache = [];
+                groupsCache = [];
+                localStorage.removeItem('expenseApp_users');
+                localStorage.removeItem('expenseApp_groups');
+                updateCacheDisplay();
+                updateAllDropdowns();
+            }
+        }
+
+        // Update cache display
+        function updateCacheDisplay() {
+            const usersDiv = document.getElementById('usersCache');
+            const groupsDiv = document.getElementById('groupsCache');
+            
+            if (usersCache.length === 0) {
+                usersDiv.innerHTML = '<div class="info-text">No users created yet</div>';
+            } else {
+                usersDiv.innerHTML = usersCache.map(u => `
+                    <div class="cache-item">
+                        <div>
+                            <strong>${u.name}</strong> (${u.email})
+                            <div class="cache-item-id">${u.id}</div>
+                        </div>
+                        <button class="btn-small" onclick="copyToClipboard('${u.id}')">Copy ID</button>
+                    </div>
+                `).join('');
+            }
+            
+            if (groupsCache.length === 0) {
+                groupsDiv.innerHTML = '<div class="info-text">No groups created yet</div>';
+            } else {
+                groupsDiv.innerHTML = groupsCache.map(g => `
+                    <div class="cache-item">
+                        <div>
+                            <strong>${g.name}</strong>
+                            <div class="cache-item-id">${g.id}</div>
+                        </div>
+                        <button class="btn-small" onclick="copyToClipboard('${g.id}')">Copy ID</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard: ' + text);
+            }).catch(() => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('Copied to clipboard: ' + text);
+            });
+        }
+
+        // Update all dropdowns
+        function updateAllDropdowns() {
+            updateUserDropdowns();
+            updateGroupDropdowns();
+        }
+
+        function updateUserDropdowns() {
+            const selects = ['addMemberUserId', 'paidByUserId', 'payerId', 'payeeId'];
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">-- Select User --</option>';
+                usersCache.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = `${user.name} (${user.email})`;
+                    select.appendChild(option);
+                });
+                if (currentValue) select.value = currentValue;
+            });
+        }
+
+        function updateGroupDropdowns() {
+            const selects = ['addMemberGroupId', 'expenseGroupId', 'balanceGroupId', 'settleGroupId'];
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">-- Select Group --</option>';
+                groupsCache.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = group.name;
+                    select.appendChild(option);
+                });
+                if (currentValue) select.value = currentValue;
+            });
+        }
+
+        // Helper function to display results
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'result ' + (isError ? 'error' : 'success');
+            element.textContent = JSON.stringify(data, null, 2);
+            console.log(isError ? 'Error:' : 'Success:', data);
+        }
+
+        // Helper function to show success message
+        function showSuccessMessage(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'success-message';
+            element.textContent = message;
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // Helper function for API calls
+        async function apiCall(url, method = 'GET', body = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+                const response = await fetch(url, options);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(JSON.stringify(data, null, 2));
+                }
+                return data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Set loading state
+        function setLoading(buttonId, isLoading) {
+            const btn = document.getElementById(buttonId);
+            if (isLoading) {
+                btn.disabled = true;
+                if (!btn.querySelector('.loading')) {
+                    const loading = document.createElement('span');
+                    loading.className = 'loading';
+                    btn.appendChild(loading);
+                }
+            } else {
+                btn.disabled = false;
+                const loading = btn.querySelector('.loading');
+                if (loading) loading.remove();
+            }
+        }
+
+        // 1. Create User
+        async function createUser() {
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            
+            if (!name || !email) {
+                showResult('userResult', { error: 'Name and email are required' }, true);
+                return;
+            }
+            
+            setLoading('createUserBtn', true);
+            try {
+                const result = await apiCall(`${API_BASE}/users`, 'POST', { name, email });
+                usersCache.push(result);
+                saveCache();
+                updateCacheDisplay();
+                updateAllDropdowns();
+                showSuccessMessage('userResult', `✓ User created successfully!\nName: ${result.name}\nEmail: ${result.email}\nID: ${result.id}`);
+                document.getElementById('userName').value = '';
+                document.getElementById('userEmail').value = '';
+            } catch (error) {
+                showResult('userResult', { error: error.message }, true);
+            } finally {
+                setLoading('createUserBtn', false);
+            }
+        }
+
+        // 2. Create Group
+        async function createGroup() {
+            const name = document.getElementById('groupName').value;
+            
+            if (!name) {
+                showResult('groupResult', { error: 'Group name is required' }, true);
+                return;
+            }
+            
+            setLoading('createGroupBtn', true);
+            try {
+                const result = await apiCall(`${API_BASE}/groups`, 'POST', { name });
+                groupsCache.push(result);
+                saveCache();
+                updateCacheDisplay();
+                updateAllDropdowns();
+                showSuccessMessage('groupResult', `✓ Group created successfully!\nName: ${result.name}\nID: ${result.id}`);
+                document.getElementById('groupName').value = '';
+            } catch (error) {
+                showResult('groupResult', { error: error.message }, true);
+            } finally {
+                setLoading('createGroupBtn', false);
+            }
+        }
+
+        // 3. Add Group Member
+        async function addGroupMember() {
+            let groupId = document.getElementById('addMemberGroupId').value;
+            if (!groupId) groupId = document.getElementById('addMemberGroupIdManual').value;
+            
+            let userId = document.getElementById('addMemberUserId').value;
+            if (!userId) userId = document.getElementById('addMemberUserIdManual').value;
+            
+            if (!groupId || !userId) {
+                showResult('addMemberResult', { error: 'Group ID and User ID are required' }, true);
+                return;
+            }
+            
+            setLoading('addMemberBtn', true);
+            try {
+                const result = await apiCall(`${API_BASE}/groups/${groupId}/members`, 'POST', { user_id: userId });
+                // Update group in cache
+                const groupIndex = groupsCache.findIndex(g => g.id === result.id);
+                if (groupIndex !== -1) {
+                    groupsCache[groupIndex] = result;
+                    saveCache();
+                    updateCacheDisplay();
+                }
+                showSuccessMessage('addMemberResult', `✓ Member added successfully!`);
+                document.getElementById('addMemberUserId').value = '';
+                document.getElementById('addMemberUserIdManual').value = '';
+            } catch (error) {
+                showResult('addMemberResult', { error: error.message }, true);
+            } finally {
+                setLoading('addMemberBtn', false);
+            }
+        }
+
+        // Load group details
+        async function loadGroupDetails() {
+            let groupId = document.getElementById('addMemberGroupId').value;
+            if (!groupId) groupId = document.getElementById('addMemberGroupIdManual').value;
+            
+            if (!groupId) {
+                alert('Please select or enter a group ID');
+                return;
+            }
+            
+            try {
+                const result = await apiCall(`${API_BASE}/groups/${groupId}`);
+                currentGroupMembers = result.members || [];
+                const groupIndex = groupsCache.findIndex(g => g.id === result.id);
+                if (groupIndex !== -1) {
+                    groupsCache[groupIndex] = result;
+                } else {
+                    groupsCache.push(result);
+                }
+                saveCache();
+                updateCacheDisplay();
+                updateAllDropdowns();
+                showSuccessMessage('addMemberResult', `✓ Group loaded! Members: ${result.members.length}`);
+            } catch (error) {
+                showResult('addMemberResult', { error: error.message }, true);
+            }
+        }
+
+        // 4. Add Expense
+        function updateSplitInputs() {
+            const splitType = document.getElementById('splitType').value;
+            const container = document.getElementById('splitInputsContainer');
+            container.innerHTML = '';
+            splitRowCount = 0;
+            
+            const autoFillBtn = document.getElementById('autoFillBtn');
+            if (splitType === 'EQUAL') {
+                autoFillBtn.style.display = 'inline-block';
+            } else {
+                autoFillBtn.style.display = 'none';
+            }
+        }
+
+        function autoFillEqualSplits() {
+            if (currentGroupMembers.length === 0) {
+                alert('Please load group details first by selecting a group');
+                return;
+            }
+            
+            const container = document.getElementById('splitInputsContainer');
+            container.innerHTML = '';
+            splitRowCount = 0;
+            
+            currentGroupMembers.forEach(member => {
+                addSplitRow();
+                const rowId = splitRowCount - 1;
+                document.getElementById(`split-user-${rowId}`).value = member.user_id;
+            });
+        }
+
+        async function loadGroupForExpense() {
+            let groupId = document.getElementById('expenseGroupId').value;
+            if (!groupId) groupId = document.getElementById('expenseGroupIdManual').value;
+            
+            if (!groupId) return;
+            
+            try {
+                const result = await apiCall(`${API_BASE}/groups/${groupId}`);
+                currentGroupMembers = result.members || [];
+                updateSplitInputs();
+            } catch (error) {
+                console.error('Failed to load group:', error);
+            }
+        }
+
+        function addSplitRow() {
+            const splitType = document.getElementById('splitType').value;
+            const container = document.getElementById('splitInputsContainer');
+            
+            const row = document.createElement('div');
+            row.className = 'split-row';
+            row.id = `split-row-${splitRowCount}`;
+            
+            const userIdSelect = document.createElement('select');
+            userIdSelect.id = `split-user-${splitRowCount}`;
+            userIdSelect.innerHTML = '<option value="">-- Select User --</option>';
+            usersCache.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.name} (${user.email})`;
+                userIdSelect.appendChild(option);
+            });
+            
+            const userIdInput = document.createElement('input');
+            userIdInput.type = 'text';
+            userIdInput.placeholder = 'Or enter User ID';
+            userIdInput.id = `split-user-manual-${splitRowCount}`;
+            userIdInput.style.display = 'none';
+            
+            const toggleBtn = document.createElement('button');
+            toggleBtn.textContent = '↔';
+            toggleBtn.className = 'btn-small';
+            toggleBtn.onclick = () => {
+                userIdSelect.style.display = userIdSelect.style.display === 'none' ? 'block' : 'none';
+                userIdInput.style.display = userIdInput.style.display === 'none' ? 'block' : 'none';
+            };
+            
+            let valueInput;
+            if (splitType === 'EXACT') {
+                valueInput = document.createElement('input');
+                valueInput.type = 'number';
+                valueInput.step = '0.01';
+                valueInput.placeholder = 'Amount';
+                valueInput.id = `split-value-${splitRowCount}`;
+            } else if (splitType === 'PERCENT') {
+                valueInput = document.createElement('input');
+                valueInput.type = 'number';
+                valueInput.step = '0.01';
+                valueInput.placeholder = 'Percent';
+                valueInput.id = `split-value-${splitRowCount}`;
+            } else {
+                valueInput = document.createElement('span');
+                valueInput.textContent = '(Equal split)';
+                valueInput.style.padding = '8px';
+            }
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = () => row.remove();
+            
+            row.appendChild(userIdSelect);
+            row.appendChild(userIdInput);
+            row.appendChild(toggleBtn);
+            row.appendChild(valueInput);
+            row.appendChild(removeBtn);
+            container.appendChild(row);
+            
+            splitRowCount++;
+        }
+
+        async function addExpense() {
+            let groupId = document.getElementById('expenseGroupId').value;
+            if (!groupId) groupId = document.getElementById('expenseGroupIdManual').value;
+            
+            let paidByUserId = document.getElementById('paidByUserId').value;
+            if (!paidByUserId) paidByUserId = document.getElementById('paidByUserIdManual').value;
+            
+            const amount = document.getElementById('expenseAmount').value;
+            const description = document.getElementById('expenseDescription').value;
+            const splitType = document.getElementById('splitType').value;
+            
+            if (!groupId || !paidByUserId || !amount || !description) {
+                showResult('expenseResult', { error: 'All fields are required' }, true);
+                return;
+            }
+            
+            const splits = [];
+            const splitRows = document.querySelectorAll('[id^="split-row-"]');
+            
+            splitRows.forEach(row => {
+                const rowId = row.id.split('-')[2];
+                let userId = document.getElementById(`split-user-${rowId}`)?.value;
+                if (!userId) {
+                    userId = document.getElementById(`split-user-manual-${rowId}`)?.value;
+                }
+                
+                if (!userId) return;
+                
+                const split = { user_id: userId };
+                
+                if (splitType === 'EXACT') {
+                    const amountValue = document.getElementById(`split-value-${rowId}`).value;
+                    if (amountValue) {
+                        split.amount = parseFloat(amountValue);
+                    }
+                } else if (splitType === 'PERCENT') {
+                    const percentValue = document.getElementById(`split-value-${rowId}`).value;
+                    if (percentValue) {
+                        split.percent = parseFloat(percentValue);
+                    }
+                }
+                
+                splits.push(split);
+            });
+            
+            const expenseData = {
+                paid_by_user_id: paidByUserId,
+                amount: parseFloat(amount),
+                description: description,
+                split_type: splitType,
+                splits: splits
+            };
+            
+            setLoading('addExpenseBtn', true);
+            try {
+                const result = await apiCall(`${API_BASE}/groups/${groupId}/expenses`, 'POST', expenseData);
+                showSuccessMessage('expenseResult', `✓ Expense added successfully!\nAmount: $${result.amount}\nDescription: ${result.description}`);
+                document.getElementById('expenseAmount').value = '';
+                document.getElementById('expenseDescription').value = '';
+                document.getElementById('splitInputsContainer').innerHTML = '';
+                splitRowCount = 0;
+            } catch (error) {
+                showResult('expenseResult', { error: error.message }, true);
+            } finally {
+                setLoading('addExpenseBtn', false);
+            }
+        }
+
+        // 5. View Balances
+        async function loadGroupForBalances() {
+            let groupId = document.getElementById('balanceGroupId').value;
+            if (!groupId) groupId = document.getElementById('balanceGroupIdManual').value;
+            
+            if (!groupId) {
+                alert('Please select or enter a group ID');
+                return;
+            }
+            
+            try {
+                const result = await apiCall(`${API_BASE}/groups/${groupId}`);
+                const groupIndex = groupsCache.findIndex(g => g.id === result.id);
+                if (groupIndex !== -1) {
+                    groupsCache[groupIndex] = result;
+                } else {
+                    groupsCache.push(result);
+                }
+                saveCache();
+                updateCacheDisplay();
+                updateAllDropdowns();
+                showSuccessMessage('balanceResult', `✓ Group loaded! Members: ${result.members.length}`);
+            } catch (error) {
+                showResult('balanceResult', { error: error.message }, true);
+            }
+        }
+
+        async function viewRawBalances() {
+            let groupId = document.getElementById('balanceGroupId').value;
+            if (!groupId) groupId = document.getElementById('balanceGroupIdManual').value;
+            
+            if (!groupId) {
+                showResult('balanceResult', { error: 'Group ID is required' }, true);
+                return;
+            }
+            
+            setLoading('rawBalanceBtn', true);
+            try {
+                const result = await apiCall(`${API_BASE}/groups/${groupId}/balances/raw`);
+                displayBalances('balanceResult', result, 'Raw Balances', ['debtor_id', 'creditor_id', 'amount']);
+            } catch (error) {
+                showResult('balanceResult', { error: error.message }, true);
+            } finally {
+                setLoading('rawBalanceBtn', false);
+            }
+        }
+
+        async function viewSimplifiedBalances() {
+            let groupId = document.getElementById('balanceGroupId').value;
+            if (!groupId) groupId = document.getElementById('balanceGroupIdManual').value;
+            
+            if (!groupId) {
+                showResult('balanceResult', { error: 'Group ID is required' }, true);
+                return;
+            }
+            
+            setLoading('simplifiedBalanceBtn', true);
+            try {
+                const result = await apiCall(`${API_BASE}/groups/${groupId}/balances/simplified`);
+                displayBalances('balanceResult', result, 'Simplified Balances', ['payer_id', 'payee_id', 'amount']);
+            } catch (error) {
+                showResult('balanceResult', { error: error.message }, true);
+            } finally {
+                setLoading('simplifiedBalanceBtn', false);
+            }
+        }
+
+        function displayBalances(elementId, data, title, columns) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'result success';
+            
+            if (!data || data.length === 0) {
+                element.textContent = `${title}: No balances found`;
+                return;
+            }
+            
+            // Create user lookup
+            const userLookup = {};
+            usersCache.forEach(u => userLookup[u.id] = u.name);
+            
+            let html = `<strong>${title}</strong><br><br>`;
+            html += '<table><thead><tr>';
+            if (columns.includes('debtor_id')) {
+                html += '<th>DEBTOR</th><th>CREDITOR</th><th>AMOUNT</th>';
+            } else {
+                html += '<th>PAYER</th><th>PAYEE</th><th>AMOUNT</th>';
+            }
+            html += '</tr></thead><tbody>';
+            
+            data.forEach(item => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    const value = item[col];
+                    if (col === 'debtor_id' || col === 'creditor_id' || col === 'payer_id' || col === 'payee_id') {
+                        const userName = userLookup[value] || value;
+                        html += `<td>${userName} <small>(${value})</small></td>`;
+                    } else {
+                        html += `<td>$${parseFloat(value).toFixed(2)}</td>`;
+                    }
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            element.innerHTML = html;
+            console.log(title + ':', data);
+        }
+
+        // 6. Settle Payment
+        async function settlePayment() {
+            let groupId = document.getElementById('settleGroupId').value;
+            if (!groupId) groupId = document.getElementById('settleGroupIdManual').value;
+            
+            let payerId = document.getElementById('payerId').value;
+            if (!payerId) payerId = document.getElementById('payerIdManual').value;
+            
+            let payeeId = document.getElementById('payeeId').value;
+            if (!payeeId) payeeId = document.getElementById('payeeIdManual').value;
+            
+            const amount = document.getElementById('settleAmount').value;
+            
+            if (!groupId || !payerId || !payeeId || !amount) {
+                showResult('settleResult', { error: 'All fields are required' }, true);
+                return;
+            }
+            
+            setLoading('settleBtn', true);
+            try {
+                const result = await apiCall(`${API_BASE}/groups/${groupId}/settlements`, 'POST', {
+                    payer_id: payerId,
+                    payee_id: payeeId,
+                    amount: parseFloat(amount)
+                });
+                const payerName = usersCache.find(u => u.id === payerId)?.name || payerId;
+                const payeeName = usersCache.find(u => u.id === payeeId)?.name || payeeId;
+                showSuccessMessage('settleResult', `✓ Settlement recorded!\n${payerName} paid $${amount} to ${payeeName}`);
+                document.getElementById('payerId').value = '';
+                document.getElementById('payeeId').value = '';
+                document.getElementById('payerIdManual').value = '';
+                document.getElementById('payeeIdManual').value = '';
+                document.getElementById('settleAmount').value = '';
+            } catch (error) {
+                showResult('settleResult', { error: error.message }, true);
+            } finally {
+                setLoading('settleBtn', false);
+            }
+        }
+
+        // Initialize on page load
+        loadCache();
+    </script>
+</body>
+</html>
